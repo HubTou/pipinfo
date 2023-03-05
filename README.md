@@ -2,7 +2,7 @@
 Once you have installed [Python](https://www.python.org/downloads/) and its packages manager [pip](https://pip.pypa.io/en/stable/installation/),
 depending on if you want only this tool, the full set of PNU tools, or PNU plus a selection of additional third-parties tools, use one of these commands:
 ```
-pip install pipinfo
+pip install pnu-pipinfo
 pip install PNU
 pip install pytnix
 ```
@@ -38,9 +38,9 @@ The **pipinfo** utility provides an alternative to the "pip list", "pip list --o
 
 It shows all the available packages in the Python PATH (not just the latest version) or given directories (even for different Python versions), differenciates user and system-wide packages (user packages are written in bright style), show duplicate packages (name in yellow foreground, including user versions shadowing system ones), shows each package summary (avoiding the use of "pip show" to discover what a package is about), and prints the count of installed packages.
 
-With the *-l|--check-latest* option, it will also use a Python Index Package web service to check for the latest versions available, use a simple color (version in yellow foreground) color or visual scheme to show outdated packages and count them.
+With the *-l|--check-latest* option, it will also use a Python Index Package web service to check for the latest versions available, using a simple color (version in yellow foreground) or visual scheme to show outdated packages and count them.
 
-With the *-v|--check-vulns* option, it will also use another Python Index Package web service to check for known vulnerabilities in your packages versions, and use a simple color (version in red background) or visual scheme to show vulnerable packages and count them.
+With the *-v|--check-vulns* option, it will also use another Python Index Package web service to check for known vulnerabilities in your packages versions, using a simple color (version in red background) or visual scheme to show vulnerable packages and count them.
 
 The color or visual scheme should be enough to tell you to upgrade the indicated packages, however you can print additional details about new versions available and vulnerabilities with the *-i|--info* option.
 
@@ -78,6 +78,14 @@ It's mostly used to display and debug the package requirements read from the Pyt
 
 ## FILES
 The **pipinfo** utility will attempt to maintain a caching directory for the web services it uses, where the individual files will be re-used within the next 24 hours.
+
+This directory will be located in one of the following places:
+* Windows:
+  * %LOCALAPPDATA%\\cache\\pipinfo
+  * %TMP%\\cache\\pipinfo
+* Unix:
+  * ${HOME}/.cache/pipinfo
+  * ${TMP}/.cache/pipinfo
 
 ## EXIT STATUS
 The **pipinfo** utility exits 0 on success, and >0 if an error occurs.

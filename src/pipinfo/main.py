@@ -17,7 +17,7 @@ from .library import get_info_from_site_packages_dir, get_user_and_system_packag
                      get_packages_required_by, is_package_required, list_packages
 
 # Version string used by the what(1) and ident(1) commands:
-ID = "@(#) $Id: pipinfo - Alternative tool for listing Python packages v0.9.0 (March 5, 2023) by Hubert Tournier $"
+ID = "@(#) $Id: pipinfo - Alternative tool for listing Python packages v0.9.1 (March 5, 2023) by Hubert Tournier $"
 
 # Default parameters. Can be overcome by environment variables, then command line options
 parameters = {

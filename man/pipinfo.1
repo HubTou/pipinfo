@@ -39,12 +39,12 @@ and prints the count of installed packages.
 With the
 .Op Fl -l|--check-latest
 option, it will also use a Python Index Package web service to check for the latest versions available,
-use a simple color (version in yellow foreground) color or visual scheme to show outdated packages and count them.
+using a simple color (version in yellow foreground) or visual scheme to show outdated packages and count them.
 .Pp
 With the
 .Op Fl -v|--check-vulns
 option, it will also use another Python Index Package web service to check for known vulnerabilities in your packages versions,
-and use a simple color (version in red background) or visual scheme to show vulnerable packages and count them.
+using a simple color (version in red background) or visual scheme to show vulnerable packages and count them.
 .Pp
 The color or visual scheme should be enough to tell you to upgrade the indicated packages,
 however you can print additional details about new versions available and vulnerabilities with the
@@ -129,6 +129,26 @@ It's mostly used to display and debug the package requirements read from the Pyt
 The
 .Nm
 utility will attempt to maintain a caching directory for the web services it uses, where the individual files will be re-used within the next 24 hours.
+.Pp
+This directory will be located in one of the following places:
+.Bl -bullet
+.It
+Windows
+.Bl -bullet
+.It
+.Pa %LOCALAPPDATA%/cache/pipinfo
+.It
+.Pa %TMP%/cache/pipinfo
+.El
+.It
+Unix:
+.Bl -bullet
+.It
+.Pa ${HOME}/.cache/pipinfo
+.It
+.Pa ${TMP}/.cache/pipinfo
+.El
+.El
 .Sh EXIT STATUS
 .Ex -std pipinfo
 .Sh EXAMPLES
