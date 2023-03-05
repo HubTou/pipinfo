@@ -1,0 +1,166 @@
+.Dd March 5, 2023
+.Dt PIPINFO 1
+.Os
+.Sh NAME
+.Nm pipinfo
+.Nd  Alternative tool for listing Python packages
+.Sh SYNOPSIS
+.Nm
+.Op Fl l|--check-latest
+.Op Fl v|--check-vulns
+.Op Fl c|--no-color
+.Op Fl p|--no-progress
+.Op Fl i|--info
+.Op Fl S|--system
+.Op Fl U|--user
+.Op Fl I|--issues
+.Op Fl O|--outdated
+.Op Fl L|--latest|--uptodate
+.Op Fl V|--vulnerable
+.Op Fl H|--healthy|--sane
+.Op Fl N|--not-required
+.Op Fl R|--required
+.Op Fl -debug
+.Op Fl -help|-?
+.Op Fl -version
+.Op Fl -
+.Op Ar directory ...
+.Sh DESCRIPTION
+The
+.Nm
+utility provides an alternative to the "pip list", "pip list --outdated", "pip show" and "pip-audit" commands.
+.Pp
+It shows all the available packages in the Python PATH (not just the latest version) or given directories (even for different Python versions),
+differenciates user and system-wide packages (user packages are written in bright style),
+show duplicate packages (name in yellow foreground, including user versions shadowing system ones),
+shows each package summary (avoiding the use of "pip show" to discover what a package is about),
+and prints the count of installed packages.
+.Pp
+With the
+.Op Fl -l|--check-latest
+option, it will also use a Python Index Package web service to check for the latest versions available,
+use a simple color (version in yellow foreground) color or visual scheme to show outdated packages and count them.
+.Pp
+With the
+.Op Fl -v|--check-vulns
+option, it will also use another Python Index Package web service to check for known vulnerabilities in your packages versions,
+and use a simple color (version in red background) or visual scheme to show vulnerable packages and count them.
+.Pp
+The color or visual scheme should be enough to tell you to upgrade the indicated packages,
+however you can print additional details about new versions available and vulnerabilities with the
+.Op Fl -i|--info
+option.
+.Pp
+You can disable the color output with the
+.Op Fl -c|--no-color
+option, and the progress meter with the
+.Op Fl -p|--no-progress
+option.
+.Pp
+Finally you can restrict the list to the user or system packages,
+outdated or up-to-date packages,
+vulnerable or sane packages,
+required or not packages with the options in upper case.
+.Pp
+The most useful one is probably the
+.Op Fl -I|--issues
+option which will select the outdated or vulnerable packages only.
+.Ss OPTIONS
+.Op Fl l|--check-latest
+Check latest versions
+.Pp
+.Op Fl v|--check-vulns
+Check vulnerabilities
+.Pp
+.Op Fl c|--no-color
+Toggle off color output
+.Pp
+.Op Fl p|--no-progress
+Toggle off progress meter
+.Pp
+.Op Fl i|--info
+Print detailed info on versions & vulnerabilities
+.Pp
+.Op Fl S|--system
+Select only system packages
+.Pp
+.Op Fl U|--user
+Select only user packages
+.Pp
+.Op Fl L|--latest|--uptodate
+Select only latest packages (implies -l)
+.Pp
+.Op Fl O|--outdated
+Select only outdated packages (implies -l)
+.Pp
+.Op Fl H|--healthy|--sane
+Select only healthy packages (implies -v)
+.Pp
+.Op Fl V|--vulnerable
+Select only vulnerable packages (implies -v)
+.Pp
+.Op Fl R|--required
+Select only required packages
+.Pp
+.Op Fl N|--not-required
+Select only not required packages
+.Pp
+.Op Fl I|--issues
+Select all packages with issues (-O & -V)
+.Pp
+.Op Fl -debug
+Enable debug mode
+.Pp
+.Op Fl -help|-?
+Print usage and this help message and exit
+.Pp
+.Op Fl -version
+Print version and exit
+.Pp
+.Op Fl -
+Options processing terminator
+.Sh ENVIRONMENT
+The
+.Ev PIPINFO_DEBUG
+environment variable can be set to any value to enable debug mode.
+.Pp
+It's mostly used to display and debug the package requirements read from the Python packages metadata files.
+.Sh FILES
+The
+.Nm
+utility will attempt to maintain a caching directory for the web services it uses, where the individual files will be re-used within the next 24 hours.
+.Sh EXIT STATUS
+.Ex -std pipinfo
+.Sh EXAMPLES
+Use the following command to print a package listing after checking for the existence of new versions or vulnerabilities:
+.Bd -literal
+pipinfo -lv
+.Ed
+.Pp
+Use the following command to restrict the list to outdated and vulnerable packages with details but no progress meter:
+.Bd -literal
+pipinfo -Iip
+.Ed
+.Sh SEE ALSO
+.Lk https://pypi.org/project/pip/ pip
+.Pp
+.Lk https://pypi.org/project/pip-audit/ pip-audit
+.Sh STANDARDS
+The
+.Nm
+utility is not a standard UNIX command.
+.Pp
+It tries to follow the PEP 8 style guide for Python code.
+.Sh PORTABILITY
+Tested OK under Windows.
+.Sh HISTORY
+This implementation was made for the PNU project,
+both for my personal convenience and also to investigate some pip issues with the *pip list --outdated* option.
+.Sh LICENSE
+It is available under the 3-clause BSD license.
+.Sh AUTHORS
+.An Hubert Tournier
+.Sh CAVEATS
+The conditions on package dependencies aren't taken into account (yet).
+.Pp
+"pipinfo -N" will nonetheless give appoximately the same results than "pip list --not-required".
