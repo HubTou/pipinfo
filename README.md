@@ -76,6 +76,9 @@ Options | Use
 The PIPINFO_DEBUG environment variable can be set to any value to enable debug mode.
 It's mostly used to display and debug the package requirements read from the Python packages metadata files.
 
+The *LOCALAPPDATA* and *TMP* environment variables under Windows, and *HOME*, *TMPDIR* and *TMP* environment variables
+under other operating systems can influence the caching directory used.
+
 ## FILES
 The **pipinfo** utility will attempt to maintain a caching directory for the web services it uses, where the individual files will be re-used within the next 24 hours.
 
@@ -85,6 +88,7 @@ This directory will be located in one of the following places:
   * %TMP%\\cache\\pipinfo
 * Unix:
   * ${HOME}/.cache/pipinfo
+  * ${TMPDIR}/.cache/pipinfo
   * ${TMP}/.cache/pipinfo
 
 ## EXIT STATUS

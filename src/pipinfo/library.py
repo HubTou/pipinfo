@@ -342,6 +342,8 @@ def get_caching_directory():
     else: # os.name == 'posix':
         if 'HOME' in os.environ:
             directory = os.environ['HOME'] + os.sep + ".cache" + os.sep + "pipinfo"
+        elif 'TMPDIR' in os.environ:
+            directory = os.environ['TMPDIR'] + os.sep + ".cache" + os.sep + "pipinfo"
         elif 'TMP' in os.environ:
             directory = os.environ['TMP'] + os.sep + ".cache" + os.sep + "pipinfo"
 
@@ -377,6 +379,11 @@ def get_package_latest_version(package_name):
                 html = http.read()
         except urllib.error.HTTPError as error:
             logging.warning("Error while fetching '%s': %s", url, error)
+            if error == 'HTTP Error 404: Not Found':
+                # Let's write an empty file to avoid retrying later...
+                if caching_file:
+                    with open(caching_file, "wb") as file:
+                        pass
             return ''
 
         if caching_file:
@@ -453,6 +460,11 @@ def get_package_vulnerabilities(package_name, package_version):
                 json_data = http.read()
         except urllib.error.HTTPError as error:
             logging.warning("Error while fetching '%s': %s", url, error)
+            if error == 'HTTP Error 404: Not Found':
+                # Let's write an empty file to avoid retrying later...
+                if caching_file:
+                    with open(caching_file, "wb") as file:
+                        pass
             return {}
 
         if caching_file:

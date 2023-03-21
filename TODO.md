@@ -21,3 +21,4 @@
 * Checking the integrity of installed packages (missing or modified files)
 * Checking the dependencies of installed packages (missing dependencies or wrong versions)
 * Wrapping long lines (-w|--wrap)
+

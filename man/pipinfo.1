@@ -1,4 +1,4 @@
-.Dd March 5, 2023
+.Dd March 21, 2023
 .Dt PIPINFO 1
 .Os
 .Sh NAME
@@ -125,6 +125,17 @@ The
 environment variable can be set to any value to enable debug mode.
 .Pp
 It's mostly used to display and debug the package requirements read from the Python packages metadata files.
+.Pp
+The
+.Ev LOCALAPPDATA
+and
+.Ev TMP
+environment variables under Windows, and
+.Ev HOME ,
+.Ev TMPDIR
+and
+.Ev TMP
+environment variables under other operating systems can influence the caching directory used.
 .Sh FILES
 The
 .Nm
@@ -145,6 +156,8 @@ Unix:
 .Bl -bullet
 .It
 .Pa ${HOME}/.cache/pipinfo
+.It
+.Pa ${TMPDIR}/.cache/pipinfo
 .It
 .Pa ${TMP}/.cache/pipinfo
 .El
