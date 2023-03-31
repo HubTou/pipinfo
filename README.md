@@ -73,7 +73,7 @@ Options | Use
 --|Options processing terminator
 
 ## ENVIRONMENT
-The PIPINFO_DEBUG environment variable can be set to any value to enable debug mode.
+The *PIPINFO_DEBUG* environment variable can be set to any value to enable debug mode.
 It's mostly used to display and debug the package requirements read from the Python packages metadata files.
 
 The *LOCALAPPDATA* and *TMP* environment variables under Windows, and *HOME*, *TMPDIR* and *TMP* environment variables

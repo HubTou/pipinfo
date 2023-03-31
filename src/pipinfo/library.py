@@ -78,35 +78,19 @@ def process_requires_file(filename, requires, extras):
                 else:
                     conditions = re.sub(r"^" + dependency + " *;* *", "", line)
                 if extra:
-                    if dependency in extras[extra]:
-                        if conditions:
-                            extras[extra][dependency] += ";" + conditions
-                        if extra_conditions:
-                            extras[extra][dependency] += ";" + extra_conditions
-                    else:
-                        extras[extra][dependency] = {}
-                        if conditions:
-                            extras[extra][dependency] = conditions
-                        if extra_conditions:
-                            if extras[extra][dependency]:
-                                extras[extra][dependency] += ";" + extra_conditions
-                            else:
-                                extras[extra][dependency] = extra_conditions
+                    if dependency not in extras[extra]:
+                        extras[extra][dependency] = []
+                    if conditions:
+                        extras[extra][dependency].append(conditions)
+                    if extra_conditions:
+                        extras[extra][dependency].append(extra_conditions)
                 else:
-                    if dependency in requires:
-                        if conditions:
-                            requires[dependency] += ";" + conditions
-                        if extra_conditions:
-                            requires[dependency] += ";" + extra_conditions
-                    else:
-                        requires[dependency] = {}
-                        if conditions:
-                            requires[dependency] = conditions
-                        if extra_conditions:
-                            if requires[dependency]:
-                                requires[dependency] += ";" + extra_conditions
-                            else:
-                                requires[dependency] = extra_conditions
+                    if dependency not in requires:
+                        requires[dependency] = []
+                    if conditions:
+                        requires[dependency].append(conditions)
+                    if extra_conditions:
+                        requires[dependency].append(extra_conditions)
 
     logging.debug("requires:\n%s", pprint.pformat(requires))
     logging.debug("extras:\n%s", pprint.pformat(extras))
@@ -175,25 +159,27 @@ def get_info_from_site_packages_dir(directory, directory_type):
                                     extra = re.sub(r"['\"].*", "", part[1:])
 
                                     # Remove the extra == "NAME" from the conditions
-                                    conditions = re.sub(r" *;* *extra == ." + extra + ". *",
-                                                        ";", conditions)
-                                    conditions = re.sub(r" *and *;", "", conditions)
-                                    conditions = re.sub(r";and *", ";", conditions)
-                                    conditions = re.sub(r";$", "", conditions)
+                                    while "extra == " in conditions:
+                                        conditions = re.sub(r" *;* *(and|or)* *extra == ('[^']*'|\"[^\"]*\") *(and|or)* *", ";", conditions)
+                                        conditions = re.sub(r";*$", "", conditions)
 
                                     if extra not in extras:
                                         extras[extra] = {}
                                     if dependency in extras[extra]:
                                         if conditions:
-                                            extras[extra][dependency] += ";" + conditions
+                                            extras[extra][dependency].append(conditions)
+                                    elif conditions:
+                                        extras[extra][dependency] = [conditions]
                                     else:
-                                        extras[extra][dependency] = conditions
+                                        extras[extra][dependency] = []
                             else:
                                 if dependency in requires:
                                     if conditions:
-                                        requires[dependency] += ";" + conditions
+                                        requires[dependency].append(conditions)
+                                elif conditions:
+                                    requires[dependency] = [conditions]
                                 else:
-                                    requires[dependency] = conditions
+                                    requires[dependency] = []
                         elif line.startswith("Home-page: "):
                             pass
                         elif line.startswith("Project-URL: "):
