@@ -7,6 +7,7 @@ Author: Hubert Tournier
 import json
 import logging
 import os
+import platform
 import pprint
 import re
 import sys
@@ -44,6 +45,16 @@ def get_site_package_dirs():
 
 
 ####################################################################################################
+def _clean_condition(condition):
+    """ Strip spaces and remove parenthesis from a requirement condition """
+    condition = condition.strip()
+    if condition[0] == '(':
+        condition = condition[1:-1]
+
+    return condition
+
+
+####################################################################################################
 def process_requires_file(filename, requires, extras):
     """ Loads requires and extras from a .egg-info/requires.txt file """
     with open(filename, encoding="utf-8", errors="ignore") as file:
@@ -77,20 +88,27 @@ def process_requires_file(filename, requires, extras):
                     conditions = re.sub(r"^.*] *;* *", "", line)
                 else:
                     conditions = re.sub(r"^" + dependency + " *;* *", "", line)
+                conditions = re.sub(r" +and +", ";", conditions)
+                conditions = re.sub(r" *, *", ";",conditions)
+
                 if extra:
                     if dependency not in extras[extra]:
                         extras[extra][dependency] = []
-                    if conditions:
-                        extras[extra][dependency].append(conditions)
-                    if extra_conditions:
-                        extras[extra][dependency].append(extra_conditions)
+                    for condition in conditions.split(";"):
+                        if condition:
+                            extras[extra][dependency].append(_clean_condition(condition))
+                    for condition in extra_conditions.split(";"):
+                        if condition:
+                            extras[extra][dependency].append(_clean_condition(condition))
                 else:
                     if dependency not in requires:
                         requires[dependency] = []
-                    if conditions:
-                        requires[dependency].append(conditions)
-                    if extra_conditions:
-                        requires[dependency].append(extra_conditions)
+                    for condition in conditions.split(";"):
+                        if condition:
+                            requires[dependency].append(_clean_condition(condition))
+                    for condition in extra_conditions.split(";"):
+                        if condition:
+                            requires[dependency].append(_clean_condition(condition))
 
     logging.debug("requires:\n%s", pprint.pformat(requires))
     logging.debug("extras:\n%s", pprint.pformat(extras))
@@ -153,6 +171,8 @@ def get_info_from_site_packages_dir(directory, directory_type):
                                 conditions = re.sub(r"^.*] *;* *", "", line)
                             else:
                                 conditions = re.sub(r"^" + dependency + " *;* *", "", line)
+                            conditions = re.sub(r" +and +", ";", conditions)
+                            conditions = re.sub(r" *, *", ";",conditions)
 
                             if "extra == " in line:
                                 for part in conditions.split("extra == ")[1:]:
@@ -160,26 +180,30 @@ def get_info_from_site_packages_dir(directory, directory_type):
 
                                     # Remove the extra == "NAME" from the conditions
                                     while "extra == " in conditions:
-                                        conditions = re.sub(r" *;* *(and|or)* *extra == ('[^']*'|\"[^\"]*\") *(and|or)* *", ";", conditions)
+                                        conditions = re.sub(r" *;* *(or)* *extra == ('[^']*'|\"[^\"]*\") *(or)* *", ";", conditions)
                                         conditions = re.sub(r";*$", "", conditions)
 
                                     if extra not in extras:
                                         extras[extra] = {}
                                     if dependency in extras[extra]:
-                                        if conditions:
-                                            extras[extra][dependency].append(conditions)
-                                    elif conditions:
-                                        extras[extra][dependency] = [conditions]
+                                        for condition in conditions.split(";"):
+                                            if condition:
+                                                extras[extra][dependency].append(_clean_condition(condition))
                                     else:
                                         extras[extra][dependency] = []
+                                        for condition in conditions.split(";"):
+                                            if condition:
+                                                extras[extra][dependency].append(_clean_condition(condition))
                             else:
                                 if dependency in requires:
-                                    if conditions:
-                                        requires[dependency].append(conditions)
-                                elif conditions:
-                                    requires[dependency] = [conditions]
+                                    for condition in conditions.split(";"):
+                                        if condition:
+                                            requires[dependency].append(_clean_condition(condition))
                                 else:
                                     requires[dependency] = []
+                                    for condition in conditions.split(";"):
+                                        if condition:
+                                            requires[dependency].append(_clean_condition(condition))
                         elif line.startswith("Home-page: "):
                             pass
                         elif line.startswith("Project-URL: "):
@@ -503,6 +527,68 @@ def is_package_vulnerable(package, vulnerabilities):
 
 
 ####################################################################################################
+def _verify_conditions(name, dependency, conditions):
+    """ """
+    if not conditions:
+        return True
+
+    for condition in conditions:
+        if condition[0].isalpha():
+            # Splitting the condition in a [string, operator, value] triplet
+            part = condition.split()
+            if len(part) != 3:
+                condition = re.sub(r" +", " ", condition)
+                condition = re.sub(r"([A-Za-z_]+) *([<=>]=*) *(.*)", r"\1 \2 \3", condition)
+                part = condition.split()
+                if len(part) != 3:
+                    logging.warning("Condition '%s' for dependency '%s' of package '%s' doesn't have 3 parts. Please report it!", condition, dependency, name)
+                    return False
+
+            value = ''
+            if part[0] == 'implementation_name':
+                value = sys.implementation.name
+            elif part[0] == 'os_name':
+                value = os.name
+            elif part[0] == 'platform_python_implementation':
+                value = platform.python_implementation()
+            elif part[0] == 'platform_system':
+                value = platform.system()
+            elif part[0] == 'python_full_version':
+                value = platform.python_version()
+            elif part[0] == 'python_version':
+                value = platform.python_version_tuple()[0] + '.' + platform.python_version_tuple()[1]
+            elif part[0] == 'sys_platform':
+                value = sys.platform
+            else:
+                logging.warning("Unknown condition string '%s' for dependency '%s' of package '%s'. Please report it!", condition, dependency, name)
+                return False
+
+            if part[2][0] in ("'", '"'):
+                part[2] = part[2][1:-1]
+
+            if part[1] == '==':
+                if value != part[2]:
+                    return False
+            elif part[1] == '<':
+                if packaging.version.parse(value) >= packaging.version.parse(part[2]):
+                    return False
+            elif part[1] == '<=':
+                if packaging.version.parse(value) > packaging.version.parse(part[2]):
+                    return False
+            elif part[1] == '>':
+                if packaging.version.parse(value) <= packaging.version.parse(part[2]):
+                    return False
+            elif part[1] == '>=':
+                if packaging.version.parse(value) < packaging.version.parse(part[2]):
+                    return False
+            else:
+                logging.warning("Unknown condition operator '%s' for dependency '%s' of package '%s'. Please report it!", condition, dependency, name)
+                return False
+
+    return True
+
+
+####################################################################################################
 def get_packages_required_by(packages):
     """ Returns a dictionary of packages which are required by others """
     required_by = {}
@@ -511,7 +597,7 @@ def get_packages_required_by(packages):
     # All comparisons are done case insensitive as packages are usually not precise...
     for package in packages:
         name = package['name'].lower()
-        for dependency in package['requires']:
+        for dependency, conditions in package['requires'].items():
             dependency = dependency.lower()
             # A dependency can reference packages options ("extras") within brackets
             if '[' in dependency:
@@ -526,35 +612,12 @@ def get_packages_required_by(packages):
                     else:
                         extras[dependency] = [part]
 
-            """ TODO The dependency conditions are not considered as of now
-            Variables seen:
-                os_name
-                    from: os.name
-                    values: 'nt', 'posix'
-                platform_python_implementation
-                    from: platform.python_implementation()
-                    values: 'CPython', 'PyPy'
-                platform_system
-                    from: platform.system()
-                    values: 'Windows', 'FreeBSD'
-                sys_platform
-                    from: sys.platform
-                    values: 'linux', 'win32', 'freebsd13'
-                python_version
-                    from: platform.python_version_tuple()[0] + '.' + platform.python_version_tuple()[1]
-                    values: '2.7', '3', '3.9'
-                python_full_version
-                    from: platform.python_version()
-                    values: '3.9.16'
-                implementation_name
-                    from: sys.implementation.name
-                    values: 'cpython'
-            """
-            if dependency in required_by:
-                if name not in required_by[dependency]:
-                    required_by[dependency].append(name)
-            else:
-                required_by[dependency] = [name]
+            if _verify_conditions(name, dependency, conditions):
+                if dependency in required_by:
+                    if name not in required_by[dependency]:
+                        required_by[dependency].append(name)
+                else:
+                    required_by[dependency] = [name]
 
     # If we have encountered extras, let's try to add their new dependencies
     while extras:
@@ -566,7 +629,7 @@ def get_packages_required_by(packages):
             if key == name:
                 for extra in value:
                     if extra in package['extras']:
-                        for dependency in package['extras'][extra]:
+                        for dependency, conditions in package['extras'][extra].items():
                             dependency = dependency.lower()
                             # A dependency can reference packages options ("extras") within brackets
                             if '[' in dependency:
@@ -581,11 +644,12 @@ def get_packages_required_by(packages):
                                     else:
                                         extras[dependency] = [part]
 
-                            if dependency in required_by:
-                                if name not in required_by[dependency]:
-                                    required_by[dependency].append(name)
-                            else:
-                                required_by[dependency] = [name]
+                            if _verify_conditions(name, dependency, conditions):
+                                if dependency in required_by:
+                                    if name not in required_by[dependency]:
+                                        required_by[dependency].append(name)
+                                else:
+                                    required_by[dependency] = [name]
 
         del extras[key]
 

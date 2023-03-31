@@ -1,8 +1,6 @@
 # Ideas for improvement and evolution
 
 ## Limitations to be removed
-* Processing dependencies conditions, including testing variables such as:
-  os_name, platform_python_implementation, platform_system, sys_platform, python_version, python_full_version, implementation_name
 * Handling variations ('-' or '_' instead of the other one) in package dependencies
 
 ## New features

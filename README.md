@@ -127,7 +127,3 @@ It is available under the [3-clause BSD license](https://opensource.org/licenses
 ## AUTHORS
 [Hubert Tournier](https://github.com/HubTou)
 
-## CAVEATS
-The conditions on package dependencies aren't taken into account (yet).
-"pipinfo -N" will nonetheless give appoximately the same results than "pip list --not-required".
-
